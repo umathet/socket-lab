@@ -8,15 +8,14 @@ class EchoTCPHandler(socketserver.BaseRequestHandler):
         print(f"Received: {data}")
         
         # Check if SECRET is in the message
-        if "SECRET" in data:
-            # Extract all digits from the message
-            digits = re.findall(r'\d', data)
-            digit_count = len(digits)
-            
-            # Format response with digits and count
-            response = f"Secret code found! Digits: {' '.join(digits)}\nTotal digits: {digit_count}"
-        else:
-            response = "Secret code not found."
+        # Inside EchoTCPHandler's handle() method:
+if "SECRET" in data:
+    digits = re.findall(r'\d', data)
+    digit_count = len(digits)
+    # Format response to match the example
+    response = f"Digits: {''.join(digits)} Count: {digit_count}"  # No spaces between digits
+else:
+    response = "Secret code not found."
         
         # Send response back to client
         self.request.sendall(response.encode('utf-8'))
