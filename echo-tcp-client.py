@@ -1,32 +1,55 @@
 import socket
+import os
 import sys
 
+# Server configuration
+HOST = 'R3'  # The server's hostname or IP address
+PORT = 12346  # The port used by the server
+
 def main():
-    # Hardcoded server IP (R3)
-    HOST = "10.10.11.2"  # No input() needed
-    PORT = 5000
+    # Check if file path is provided as command-line argument
+    if len(sys.argv) != 2:
+        print("Usage: python tcp_file_transfer_client.py <file_path>")
+        return
     
-    # Get message from command-line arguments
-    if len(sys.argv) < 2:
-        print("Usage: python3 echo_tcp_client.py <message>")
-        sys.exit(1)
-    message = ' '.join(sys.argv[1:])  # Join all args into one string
+    file_path = sys.argv[1]
     
-    # Create socket and connect
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        try:
-            sock.connect((HOST, PORT))
-        except Exception as e:
-            print(f"Connection failed: {e}")
-            sys.exit(1)
+    # Check if file exists
+    if not os.path.isfile(file_path):
+        print(f"Error: File '{file_path}' does not exist")
+        return
+    
+    # Get file size
+    file_size = os.path.getsize(file_path)
+    
+    # Create a TCP socket
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+    try:
+        # Connect to the server
+        client_socket.connect((HOST, PORT))
+        print(f"Connected to server {HOST}:{PORT}")
         
-        # Send message and print output
-        sock.sendall(message.encode('utf-8'))
-        print(f"Sent: {message}")  # Match example's "Sent:" line
+        # Send file size first (as a 10-byte string)
+        size_str = f"{file_size:010d}"
+        client_socket.sendall(size_str.encode('utf-8'))
         
-        # Receive response
-        response = sock.recv(1024).decode('utf-8')
-        print(f"Received: {response}")
+        # Send the file data
+        with open(file_path, 'rb') as f:
+            data = f.read()
+            client_socket.sendall(data)
+        
+        print(f"Sent file '{file_path}' ({file_size} bytes)")
+        
+        # Receive confirmation from server
+        response = client_socket.recv(1024).decode('utf-8')
+        print(f"Server response: {response}")
+        
+    finally:
+        # Close the connection
+        client_socket.close()
+        print("Connection closed")
 
 if __name__ == "__main__":
     main()
+    
