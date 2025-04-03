@@ -1,26 +1,17 @@
 import socket
-import os
 import sys
 
 # Server configuration
 HOST = 'R3'  # The server's hostname or IP address
-PORT = 12346  # The port used by the server
+PORT = 12345  # The port used by the server
 
 def main():
-    # Check if file path is provided as command-line argument
+    # Check if message is provided as command-line argument
     if len(sys.argv) != 2:
-        print("Usage: python tcp_file_transfer_client.py <file_path>")
+        print("Usage: python echo_tcp_client.py <message>")
         return
     
-    file_path = sys.argv[1]
-    
-    # Check if file exists
-    if not os.path.isfile(file_path):
-        print(f"Error: File '{file_path}' does not exist")
-        return
-    
-    # Get file size
-    file_size = os.path.getsize(file_path)
+    message = sys.argv[1]
     
     # Create a TCP socket
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -30,20 +21,13 @@ def main():
         client_socket.connect((HOST, PORT))
         print(f"Connected to server {HOST}:{PORT}")
         
-        # Send file size first (as a 10-byte string)
-        size_str = f"{file_size:010d}"
-        client_socket.sendall(size_str.encode('utf-8'))
+        # Send message to server
+        client_socket.sendall(message.encode('utf-8'))
+        print(f"Sent: {message}")
         
-        # Send the file data
-        with open(file_path, 'rb') as f:
-            data = f.read()
-            client_socket.sendall(data)
-        
-        print(f"Sent file '{file_path}' ({file_size} bytes)")
-        
-        # Receive confirmation from server
+        # Receive response from server
         response = client_socket.recv(1024).decode('utf-8')
-        print(f"Server response: {response}")
+        print(f"Received: {response}")
         
     finally:
         # Close the connection
@@ -52,4 +36,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
